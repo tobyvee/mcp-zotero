@@ -9,6 +9,9 @@ LDFLAGS  := -s -w -X main.version=$(VERSION)
 # Platforms for `make cross`, as GOOS/GOARCH pairs.
 PLATFORMS := darwin/arm64 darwin/amd64 linux/arm64 linux/amd64 windows/amd64
 
+# Where `make install-darwin` puts the binary.
+INSTALL_DIR ?= $(HOME)/.local/bin
+
 .DEFAULT_GOAL := build
 
 .PHONY: build
@@ -27,6 +30,12 @@ cross: ## Cross-compile for every platform in $(PLATFORMS) into ./bin
 		GOOS=$$os GOARCH=$$arch CGO_ENABLED=0 \
 			go build -ldflags "$(LDFLAGS)" -o $$out $(PKG) || exit 1; \
 	done
+
+.PHONY: install-darwin
+install-darwin: ## Build for macOS (host arch) and install to ~/.local/bin (override INSTALL_DIR)
+	@mkdir -p $(INSTALL_DIR)
+	GOOS=darwin CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o $(INSTALL_DIR)/$(BINARY) $(PKG)
+	@echo "installed $(BINARY) $(VERSION) -> $(INSTALL_DIR)/$(BINARY)"
 
 .PHONY: run
 run: ## Run the server over stdio (talks to Zotero's local API)
@@ -67,4 +76,4 @@ clean: ## Remove build artifacts
 .PHONY: help
 help: ## List available targets
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
-		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2}'
+		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
