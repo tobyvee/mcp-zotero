@@ -60,5 +60,9 @@ Point your client at the built binary. For Claude Desktop
 | `ZOTERO_API_URL` | `--base-url` | `http://localhost:23119/api`   |
 | `ZOTERO_USER_ID` | `--user-id`  | `0` (the logged-in user)       |
 
+## License
+
+[MIT](LICENSE)
+
 [local-api]: https://www.zotero.org/support/dev/web_api/v3/local_api
 [go-sdk]: https://github.com/modelcontextprotocol/go-sdk
