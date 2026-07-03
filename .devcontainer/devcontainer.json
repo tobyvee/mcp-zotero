@@ -1,0 +1,27 @@
+{
+  "name": "mcp-zotero",
+  // Tracks the latest supported Go 1.x; the MCP SDK requires Go >= 1.25.
+  "image": "mcr.microsoft.com/devcontainers/go:1-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {}
+  },
+  // Zotero runs on the HOST, but localhost inside the container points at the
+  // container. Reach the host's local API via host.docker.internal instead.
+  "containerEnv": {
+    "ZOTERO_API_URL": "http://host.docker.internal:23119/api"
+  },
+  // Make host.docker.internal resolve on Linux Docker (already works on Docker
+  // Desktop for macOS/Windows).
+  "runArgs": ["--add-host=host.docker.internal:host-gateway"],
+  // Install deps and the linter used by `make lint`.
+  "postCreateCommand": "go mod download && curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $(go env GOPATH)/bin",
+  "customizations": {
+    "vscode": {
+      "extensions": ["golang.go"],
+      "settings": {
+        "go.useLanguageServer": true,
+        "go.lintTool": "golangci-lint"
+      }
+    }
+  }
+}
