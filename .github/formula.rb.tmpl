@@ -1,0 +1,36 @@
+class McpZotero < Formula
+  desc "Read-only MCP server exposing your local Zotero library over stdio"
+  homepage "https://github.com/tobyvee/mcp-zotero"
+  version "__VERSION__"
+  license "MIT"
+
+  on_macos do
+    on_arm do
+      url "https://github.com/tobyvee/mcp-zotero/releases/download/v__VERSION__/mcp-zotero-darwin-arm64"
+      sha256 "__SHA_DARWIN_ARM64__"
+    end
+    on_intel do
+      url "https://github.com/tobyvee/mcp-zotero/releases/download/v__VERSION__/mcp-zotero-darwin-amd64"
+      sha256 "__SHA_DARWIN_AMD64__"
+    end
+  end
+
+  on_linux do
+    on_arm do
+      url "https://github.com/tobyvee/mcp-zotero/releases/download/v__VERSION__/mcp-zotero-linux-arm64"
+      sha256 "__SHA_LINUX_ARM64__"
+    end
+    on_intel do
+      url "https://github.com/tobyvee/mcp-zotero/releases/download/v__VERSION__/mcp-zotero-linux-amd64"
+      sha256 "__SHA_LINUX_AMD64__"
+    end
+  end
+
+  def install
+    bin.install Dir["mcp-zotero-*"].first => "mcp-zotero"
+  end
+
+  test do
+    assert_match version.to_s, shell_output("#{bin}/mcp-zotero -version")
+  end
+end

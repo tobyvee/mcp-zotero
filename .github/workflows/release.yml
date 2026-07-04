@@ -49,3 +49,71 @@ jobs:
             ./bin/mcp-zotero-* ./bin/checksums.txt \
             --title "${{ github.ref_name }}" \
             --generate-notes
+
+  # Regenerates Formula/mcp-zotero.rb in tobyvee/homebrew-tap from this
+  # release's checksums and pushes it. Requires a TAP_GITHUB_TOKEN secret (a PAT
+  # with contents:write on the tap repo); the built-in GITHUB_TOKEN cannot push
+  # to another repo. Skips gracefully if the secret is absent.
+  bump-tap:
+    name: Update Homebrew tap
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Guard on tap token
+        id: guard
+        env:
+          TAP_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
+        run: |
+          if [ -z "$TAP_TOKEN" ]; then
+            echo "::notice::TAP_GITHUB_TOKEN not set — skipping Homebrew tap update."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout app (formula template)
+        if: steps.guard.outputs.skip != 'true'
+        uses: actions/checkout@v4
+        with:
+          path: app
+
+      - name: Checkout tap
+        if: steps.guard.outputs.skip != 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: tobyvee/homebrew-tap
+          token: ${{ secrets.TAP_GITHUB_TOKEN }}
+          path: tap
+
+      - name: Render formula from release checksums
+        if: steps.guard.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          version="${TAG#v}"
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --pattern checksums.txt --output checksums.txt --clobber
+          sha() { awk -v f="$1" '$2 == f { print $1 }' checksums.txt; }
+          sed \
+            -e "s|__VERSION__|${version}|g" \
+            -e "s|__SHA_DARWIN_ARM64__|$(sha mcp-zotero-darwin-arm64)|g" \
+            -e "s|__SHA_DARWIN_AMD64__|$(sha mcp-zotero-darwin-amd64)|g" \
+            -e "s|__SHA_LINUX_ARM64__|$(sha mcp-zotero-linux-arm64)|g" \
+            -e "s|__SHA_LINUX_AMD64__|$(sha mcp-zotero-linux-amd64)|g" \
+            app/.github/formula.rb.tmpl > tap/Formula/mcp-zotero.rb
+
+      - name: Commit and push
+        if: steps.guard.outputs.skip != 'true'
+        working-directory: tap
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- Formula/mcp-zotero.rb; then
+            echo "formula already up to date"
+          else
+            git add Formula/mcp-zotero.rb
+            git commit -m "mcp-zotero ${TAG}"
+            git push
+          fi
