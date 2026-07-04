@@ -14,14 +14,44 @@ Built in Go with the [official MCP Go SDK][go-sdk].
 - The local API enabled: **Settings → Advanced → "Allow other applications on
   this computer to communicate with Zotero"**. Without this, requests return
   `403 Forbidden`.
-- **Go 1.25+** to build (or use the included devcontainer).
 
-## Build
+## Install
+
+### Homebrew (macOS / Linux)
 
 ```sh
-make build      # -> ./bin/mcp-zotero (host platform)
-make cross      # -> ./bin/mcp-zotero-<os>-<arch> for all platforms
-make test       # run tests
+brew install tobyvee/tap/mcp-zotero
+```
+
+### Prebuilt binary
+
+Download the binary for your platform from the [latest release][releases], make
+it executable, and put it on your `PATH`:
+
+```sh
+curl -fL -o mcp-zotero \
+  https://github.com/tobyvee/mcp-zotero/releases/latest/download/mcp-zotero-darwin-arm64
+chmod +x mcp-zotero && mv mcp-zotero ~/.local/bin/
+```
+
+Swap `darwin-arm64` for `darwin-amd64`, `linux-arm64`, `linux-amd64`, or
+`windows-amd64.exe` as needed.
+
+### From source
+
+Requires **Go 1.25+** (or the included devcontainer):
+
+```sh
+make build      # -> ./bin/mcp-zotero
+```
+
+## Development
+
+```sh
+make build      # host binary  -> ./bin/mcp-zotero
+make cross      # all platforms -> ./bin/mcp-zotero-<os>-<arch>
+make test       # go test -race ./...
+make lint       # vet + gofmt + golangci-lint
 make help       # list all targets
 ```
 
@@ -66,3 +96,4 @@ Point your client at the built binary. For Claude Desktop
 
 [local-api]: https://www.zotero.org/support/dev/web_api/v3/local_api
 [go-sdk]: https://github.com/modelcontextprotocol/go-sdk
+[releases]: https://github.com/tobyvee/mcp-zotero/releases/latest
